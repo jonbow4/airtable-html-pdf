@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+
+<body>
+  <main class="container">
+    <div id="app">
+      <h1>{{ title }}</h1>
+
+      <div v-for="(item, index) in items">
+        <div v-for="element in item">
+          <div v-bind:class="element.style">
+            <tag v-if="element.style == 'img'" :is="element.style" v-bind:src="element.content"></tag>
+            <tag v-else-if="element.style !== 'img'" :is="element.style">{{ element.content }}</tag>
+          </div>
+        </div>
+        <div v-if="index % 4 == 3" class="break"></div>
+        <div v-else-if="index % 4 !== 3" class=""></div>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    Vue.component('tag', {
+      props: {
+        is: {
+          type: String,
+          required: true
+        }
+      },
+      render(h) {
+        return h(this.tag, this.$slots.default)
+      }
+    })
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        title: 'ENTER H1 PAGE TITLE HERE',
+        items: []
+      },
+      mounted: function() {
+        this.loadItems();
+      },
+      methods: {
+        loadItems: function() {
+          var app_id = "YOUR APP ID HERE";
+          var api_key = "YOUR API KEY HERE";
+          var table = 'YOUR TABLE NAME HERE';
+          var view = 'YOUR VIEW NAME HERE';
+          var record_fields = [YOUR ARRAY OF FIELD NAMES HERE]
+
+
+          var self = this
+          this.items = []
+          axios.get(
+            "https://api.airtable.com/v0/" + app_id + "/" + table + "?maxRecords=100&view=" + view, {
+              headers: {
+                Authorization: "Bearer " + api_key
+              }
+            }
+          ).then(function(response) {
+            var data = response.data.records;
+            var i;
+            var output = [];
+            for (i = 0; i < data.length; i++) {
+              object = []
+              for (j = 0; j < record_fields.length; j++) {
+                var c = data[i].fields[record_fields[j]]
+                var s = data[i].fields[record_fields[j] + 'Styling']
+                if (s == 'img') {
+                  content = c[0].url;
+                } else {
+                  content = c;
+                }
+                element = {
+                  content: content,
+                  style: s
+                }
+                object.push(element);
+              }
+              output.push(object);
+            }
+            self.items = output;
+          }).catch(function(error) {
+            console.log(error)
+          })
+        }
+      }
+    })
+  </script>
+
+  <style media="all">
+    img {
+      width: 100px;
+    }
+
+    .container {
+      margin-top: 20px;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+    }
+
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    img {
+      margin-bottom: 10px;
+    }
+
+    .break {
+      page-break-after: always;
+    }
+  </style>
+
+</body>
+
+</html>
